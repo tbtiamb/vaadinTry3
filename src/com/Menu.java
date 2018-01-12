@@ -10,6 +10,12 @@ import com.vaadin.ui.Button;
 import com.vaadin.ui.Button.ClickEvent;
 import com.vaadin.ui.Label;
 import com.vaadin.ui.TextField;
+import lab4.CheckBean;
+
+import javax.ejb.EJB;
+import java.lang.reflect.Array;
+import java.util.ArrayList;
+import java.util.List;
 
 
 //import org.vaadin.hezamu.canvas.Canvas;
@@ -20,31 +26,18 @@ import com.vaadin.ui.TextField;
 @com.vaadin.annotations.JavaScript("js/canvas.js")
 public class Menu extends CustomComponent {
 
+    @EJB
+    private CheckBean check = new CheckBean();
 
     public Menu() {
         VerticalLayout layout = new VerticalLayout();
         HorizontalLayout inputDataLayout = new HorizontalLayout();
 
-     /*   VerticalLayout checkBoxLayotX = new VerticalLayout();
-        Label coordX = new Label("Координата X:");
-        checkBoxLayotX.addComponent(coordX);
-        int value = -3;
-        for (int i = 0; i < 8; i++) {
-            CheckBox xCheckBox = new CheckBox(String.valueOf(value));
-            checkBoxLayotX.addComponent(xCheckBox);
-            value++;
-        } */
 
      //Чекбокс группы для X и радиууса
 
         CheckBoxGroup<Integer> groupX = new CheckBoxGroup<>("Координата X:");
         groupX.setItems(-3,-2,-1,0,1,2,3,4,5);
-//        groupX.addSelectionListener(multiSelectionEvent -> {
-//
-//            if(groupX.getSelectedItems().size() > 1){ //Вешаю листенер, если выбрано больше двух элементов, то он стирает все
-//                groupX.deselectAll();
-//            }
-//        });
 
         CheckBoxGroup<Integer> groupR = new CheckBoxGroup<>("Радиус:");
         groupR.setItems(1,2,3,4,5);
@@ -55,16 +48,6 @@ public class Menu extends CustomComponent {
             }
         });
 
-
-     /*   VerticalLayout checkBoxLayotR = new VerticalLayout();  Старые чекбоксы
-        Label coordR = new Label("Радиус:");
-        checkBoxLayotR.addComponent(coordR);
-        value = 1;
-        for (int i = 0; i < 6; i++) {
-            CheckBox xCheckBox = new CheckBox(String.valueOf(value));
-            checkBoxLayotR.addComponent(xCheckBox);
-            value++;
-        }*/
 
      // Текстфилд и валидация для него
 
@@ -81,8 +64,26 @@ public class Menu extends CustomComponent {
         inputDataLayout.addComponents(groupX,groupR,checkBoxLayotY);
         layout.addComponent(inputDataLayout);
 
-        layout.addComponent(submittButton());
 
+        Button submittButton = new Button("Отправить");
+        submittButton.addClickListener(new Button.ClickListener() {
+            public void buttonClick(ClickEvent event) {
+                if (getUI().getSession().getAttribute("sesFlag") == null){
+                    getUI().getNavigator().navigateTo(MyVaadinApplication.LOGINVIEW);
+                }
+                else {
+                    ArrayList<Integer> list = new ArrayList<Integer>();
+                    ArrayList<Integer> rad = new ArrayList<Integer>();
+                    list.addAll(groupX.getSelectedItems());
+                    rad.addAll(groupR.getSelectedItems());
+                    Integer radius = rad.get(0);
+                    for(int i = 0; i < list.size(); i++){
+                        check.check(list.get(i), Double.parseDouble(textY.getValue()), radius);
+                    }
+                }
+            }
+        });
+        layout.addComponent(submittButton);
         //Тут добавляем таблицу
 
         Grid<Point> pointsTable = new Grid<>();
@@ -118,17 +119,17 @@ public class Menu extends CustomComponent {
         return button;
     }
 
-    private Button submittButton() {
-        Button button = new Button("Отправить", new Button.ClickListener() {
-            @Override
-            public void buttonClick(ClickEvent event) {
-                if (getUI().getSession().getAttribute("sesFlag") == null){
-                    getUI().getNavigator().navigateTo(MyVaadinApplication.LOGINVIEW);
-                }
-            }
-        });
-        return button;
-    }
+//    private Button submittButton() {
+//        Button button = new Button("Отправить", new Button.ClickListener() {
+//            @Override
+//            public void buttonClick(ClickEvent event) {
+//                if (getUI().getSession().getAttribute("sesFlag") == null){
+//                    getUI().getNavigator().navigateTo(MyVaadinApplication.LOGINVIEW);
+//                }
+//            }
+//        });
+//        return button;
+//    }
 
     private String getLogoutPath() {
         return getUI().getPage().getLocation().getPath();
@@ -175,10 +176,10 @@ public class Menu extends CustomComponent {
             return status;
         }
 
-        @Override
-        public String toString() {
-            return String.format("Point [coordX=%s, coordY=%s, coordR=%s, status=%s]", coordX,
-                    coordY, coordR, status);
-        }
+//        @Override
+//        public String toString() {
+//            return String.format("Point [coordX=%s, coordY=%s, coordR=%s, status=%s]", coordX,
+//                    coordY, coordR, status);
+//        }
     }
 }
